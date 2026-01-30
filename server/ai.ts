@@ -181,12 +181,18 @@ Limit to the top 15-20 most relevant skills.`;
     });
 
     const content = response.choices[0].message.content;
-    if (!content) throw new Error("No response from AI");
+    if (!content) {
+      console.error("No content from AI response");
+      return [];
+    }
 
     const parsed = JSON.parse(content);
-    return parsed.skills || [];
-  } catch (error) {
-    console.error("AI skill extraction error:", error);
+    const skills = parsed.skills || [];
+    console.log(`AI extracted ${skills.length} skills from resume`);
+    return skills;
+  } catch (error: any) {
+    console.error("AI skill extraction error:", error?.message || error);
+    // Don't throw - return empty array so user can add skills manually
     return [];
   }
 }

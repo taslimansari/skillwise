@@ -188,11 +188,33 @@ export async function registerRoutes(
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const pdf = (pdfParse as any).default || pdfParse;
-      const pdfData = await pdf(req.file.buffer);
-      const text = pdfData.text;
+      // Parse PDF
+      let text: string;
+      try {
+        const pdf = (pdfParse as any).default || pdfParse;
+        const pdfData = await pdf(req.file.buffer);
+        text = pdfData.text;
+        
+        if (!text || text.trim().length < 50) {
+          return res.status(400).json({ 
+            message: "Could not extract text from PDF. Please ensure the PDF contains readable text (not scanned images)." 
+          });
+        }
+      } catch (pdfError: any) {
+        console.error("PDF parsing error:", pdfError);
+        return res.status(400).json({ 
+          message: "Could not read PDF file. Please ensure it's a valid PDF document." 
+        });
+      }
 
+      // Extract skills using AI
       const extractedSkills = await extractSkillsFromText(text);
+      
+      if (extractedSkills.length === 0) {
+        return res.status(400).json({ 
+          message: "No skills could be identified from your resume. Please try adding skills manually." 
+        });
+      }
 
       const skillsToCreate = extractedSkills.map((skill) => ({
         userId: req.session.userId!,
@@ -210,9 +232,11 @@ export async function registerRoutes(
       });
 
       res.json({ extractedCount: createdSkills.length, skills: createdSkills });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Extract skills error:", error);
-      res.status(500).json({ message: "Failed to extract skills from resume" });
+      res.status(500).json({ 
+        message: error.message || "Failed to extract skills from resume. Please try again." 
+      });
     }
   });
 
