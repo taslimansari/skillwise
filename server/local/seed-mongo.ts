@@ -351,8 +351,3 @@ export async function seedMongoDB() {
   }
 }
 
-if (require.main === module) {
-  seedMongoDB()
-    .then(() => process.exit(0))
-    .catch(() => process.exit(1));
-}

@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-export interface IUser extends Document {
+export interface IUser {
   _id: string;
   email: string;
   password: string;
@@ -13,7 +13,8 @@ export interface IUser extends Document {
   createdAt: Date;
 }
 
-export interface ISkill extends Document {
+export interface ISkill {
+  _id: mongoose.Types.ObjectId;
   userId: string;
   name: string;
   category: "technical" | "tools" | "soft";
@@ -21,7 +22,8 @@ export interface ISkill extends Document {
   createdAt: Date;
 }
 
-export interface ICareerPath extends Document {
+export interface ICareerPath {
+  _id: mongoose.Types.ObjectId;
   userId: string;
   title: string;
   description: string;
@@ -34,7 +36,8 @@ export interface ICareerPath extends Document {
   createdAt: Date;
 }
 
-export interface IRoadmap extends Document {
+export interface IRoadmap {
+  _id: mongoose.Types.ObjectId;
   userId: string;
   careerPathId?: mongoose.Types.ObjectId;
   title: string;
@@ -42,7 +45,8 @@ export interface IRoadmap extends Document {
   createdAt: Date;
 }
 
-export interface IRoadmapStep extends Document {
+export interface IRoadmapStep {
+  _id: mongoose.Types.ObjectId;
   roadmapId: mongoose.Types.ObjectId;
   phase: "Beginner" | "Intermediate" | "Advanced";
   title: string;
@@ -54,7 +58,8 @@ export interface IRoadmapStep extends Document {
   createdAt: Date;
 }
 
-export interface ICourse extends Document {
+export interface ICourse {
+  _id: mongoose.Types.ObjectId;
   title: string;
   description: string;
   platform: string;
@@ -69,13 +74,15 @@ export interface ICourse extends Document {
   createdAt: Date;
 }
 
-export interface ISavedCourse extends Document {
+export interface ISavedCourse {
+  _id: mongoose.Types.ObjectId;
   userId: string;
   courseId: mongoose.Types.ObjectId;
   createdAt: Date;
 }
 
-export interface IProject extends Document {
+export interface IProject {
+  _id: mongoose.Types.ObjectId;
   title: string;
   description: string;
   difficulty: string;
@@ -86,14 +93,16 @@ export interface IProject extends Document {
   createdAt: Date;
 }
 
-export interface ISavedProject extends Document {
+export interface ISavedProject {
+  _id: mongoose.Types.ObjectId;
   userId: string;
   projectId: mongoose.Types.ObjectId;
   isCompleted: boolean;
   createdAt: Date;
 }
 
-export interface IResume extends Document {
+export interface IResume {
+  _id: mongoose.Types.ObjectId;
   userId: string;
   filename: string;
   extractedSkills?: any;

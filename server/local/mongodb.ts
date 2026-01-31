@@ -2,9 +2,23 @@ import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/skillwise";
 
+let isConnected = false;
+
 export async function connectMongoDB(): Promise<void> {
+  if (isConnected) {
+    console.log("MongoDB already connected");
+    return;
+  }
+
   try {
-    await mongoose.connect(MONGODB_URI);
+    mongoose.set("strictQuery", true);
+    
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    
+    isConnected = true;
     console.log("Connected to MongoDB successfully");
   } catch (error) {
     console.error("MongoDB connection error:", error);
@@ -13,7 +27,10 @@ export async function connectMongoDB(): Promise<void> {
 }
 
 export async function disconnectMongoDB(): Promise<void> {
+  if (!isConnected) return;
+  
   await mongoose.disconnect();
+  isConnected = false;
   console.log("Disconnected from MongoDB");
 }
 
@@ -22,6 +39,7 @@ mongoose.connection.on("error", (err) => {
 });
 
 mongoose.connection.on("disconnected", () => {
+  isConnected = false;
   console.log("MongoDB disconnected");
 });
 

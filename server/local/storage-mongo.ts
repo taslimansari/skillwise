@@ -52,7 +52,7 @@ export class MongoStorage {
     return toPlainArray(skills);
   }
 
-  async getSkill(id: number | string) {
+  async getSkill(id: string) {
     const skill = await Skill.findById(id);
     return toPlainObject(skill);
   }
@@ -69,7 +69,7 @@ export class MongoStorage {
     return toPlainArray(skills);
   }
 
-  async deleteSkill(id: number | string) {
+  async deleteSkill(id: string) {
     await Skill.findByIdAndDelete(id);
   }
 
@@ -82,7 +82,7 @@ export class MongoStorage {
     return toPlainArray(paths);
   }
 
-  async getCareerPath(id: number | string) {
+  async getCareerPath(id: string) {
     const path = await CareerPath.findById(id);
     return toPlainObject(path);
   }
@@ -99,7 +99,7 @@ export class MongoStorage {
     return toPlainArray(paths);
   }
 
-  async updateCareerPath(id: number | string, data: any) {
+  async updateCareerPath(id: string, data: any) {
     const path = await CareerPath.findByIdAndUpdate(id, data, { new: true });
     return toPlainObject(path);
   }
@@ -108,7 +108,7 @@ export class MongoStorage {
     await CareerPath.deleteMany({ userId });
   }
 
-  async selectCareerPath(userId: string, careerPathId: number | string) {
+  async selectCareerPath(userId: string, careerPathId: string) {
     await CareerPath.updateMany({ userId }, { isSelected: false });
     await CareerPath.findByIdAndUpdate(careerPathId, { isSelected: true });
   }
@@ -144,24 +144,31 @@ export class MongoStorage {
     await Roadmap.deleteMany({ userId });
   }
 
-  async getRoadmapSteps(roadmapId: number | string) {
-    const steps = await RoadmapStep.find({ roadmapId }).sort({ orderIndex: 1 });
+  async getRoadmapSteps(roadmapId: string) {
+    const steps = await RoadmapStep.find({ roadmapId: new mongoose.Types.ObjectId(roadmapId) }).sort({ orderIndex: 1 });
     return toPlainArray(steps);
   }
 
   async createRoadmapStep(stepData: any) {
-    const step = new RoadmapStep(stepData);
+    const step = new RoadmapStep({
+      ...stepData,
+      roadmapId: new mongoose.Types.ObjectId(stepData.roadmapId),
+    });
     await step.save();
     return toPlainObject(step);
   }
 
   async createManyRoadmapSteps(stepsData: any[]) {
     if (stepsData.length === 0) return [];
-    const steps = await RoadmapStep.insertMany(stepsData);
+    const stepsWithObjectIds = stepsData.map((step) => ({
+      ...step,
+      roadmapId: new mongoose.Types.ObjectId(step.roadmapId),
+    }));
+    const steps = await RoadmapStep.insertMany(stepsWithObjectIds);
     return toPlainArray(steps);
   }
 
-  async updateRoadmapStep(id: number | string, data: any) {
+  async updateRoadmapStep(id: string, data: any) {
     const step = await RoadmapStep.findByIdAndUpdate(id, data, { new: true });
     return toPlainObject(step);
   }
@@ -171,7 +178,7 @@ export class MongoStorage {
     return toPlainArray(courses);
   }
 
-  async getCourse(id: number | string) {
+  async getCourse(id: string) {
     const course = await Course.findById(id);
     return toPlainObject(course);
   }
@@ -190,20 +197,23 @@ export class MongoStorage {
 
   async getSavedCourses(userId: string) {
     const savedCourses = await SavedCourse.find({ userId }).populate("courseId");
-    return savedCourses.map((sc) => ({
+    return savedCourses.map((sc: any) => ({
       ...toPlainObject(sc),
       course: toPlainObject(sc.courseId),
     }));
   }
 
   async createSavedCourse(savedCourseData: any) {
-    const savedCourse = new SavedCourse(savedCourseData);
+    const savedCourse = new SavedCourse({
+      ...savedCourseData,
+      courseId: new mongoose.Types.ObjectId(savedCourseData.courseId),
+    });
     await savedCourse.save();
     return toPlainObject(savedCourse);
   }
 
-  async deleteSavedCourse(userId: string, courseId: number | string) {
-    await SavedCourse.deleteOne({ userId, courseId });
+  async deleteSavedCourse(userId: string, courseId: string) {
+    await SavedCourse.deleteOne({ userId, courseId: new mongoose.Types.ObjectId(courseId) });
   }
 
   async getProjects() {
@@ -211,7 +221,7 @@ export class MongoStorage {
     return toPlainArray(projects);
   }
 
-  async getProject(id: number | string) {
+  async getProject(id: string) {
     const project = await Project.findById(id);
     return toPlainObject(project);
   }
@@ -230,29 +240,32 @@ export class MongoStorage {
 
   async getSavedProjects(userId: string) {
     const savedProjects = await SavedProject.find({ userId }).populate("projectId");
-    return savedProjects.map((sp) => ({
+    return savedProjects.map((sp: any) => ({
       ...toPlainObject(sp),
       project: toPlainObject(sp.projectId),
     }));
   }
 
   async createSavedProject(savedProjectData: any) {
-    const savedProject = new SavedProject(savedProjectData);
+    const savedProject = new SavedProject({
+      ...savedProjectData,
+      projectId: new mongoose.Types.ObjectId(savedProjectData.projectId),
+    });
     await savedProject.save();
     return toPlainObject(savedProject);
   }
 
-  async updateSavedProject(userId: string, projectId: number | string, data: any) {
+  async updateSavedProject(userId: string, projectId: string, data: any) {
     const savedProject = await SavedProject.findOneAndUpdate(
-      { userId, projectId },
+      { userId, projectId: new mongoose.Types.ObjectId(projectId) },
       data,
       { new: true }
     );
     return toPlainObject(savedProject);
   }
 
-  async deleteSavedProject(userId: string, projectId: number | string) {
-    await SavedProject.deleteOne({ userId, projectId });
+  async deleteSavedProject(userId: string, projectId: string) {
+    await SavedProject.deleteOne({ userId, projectId: new mongoose.Types.ObjectId(projectId) });
   }
 
   async createResume(resumeData: any) {

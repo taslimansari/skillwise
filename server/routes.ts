@@ -1,10 +1,9 @@
 import type { Express, Request, Response, NextFunction } from "express";
-import { createServer, type Server } from "http";
+import { type Server } from "http";
 import session from "express-session";
 import bcrypt from "bcrypt";
-import { storage } from "./storage";
+import { mongoStorage as storage } from "./local/storage-mongo";
 import { generateCareerRecommendations, generateRoadmap, extractSkillsFromText } from "./ai";
-import { seedDatabase } from "./seed";
 import {
   loginSchema,
   registerSchema,
@@ -41,12 +40,10 @@ export async function registerRoutes(
       cookie: {
         secure: false,
         httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+        maxAge: 1000 * 60 * 60 * 24 * 7,
       },
     })
   );
-
-  await seedDatabase();
 
   app.post("/api/auth/register", async (req, res) => {
     try {
@@ -169,7 +166,7 @@ export async function registerRoutes(
 
   app.delete("/api/skills/:id", requireAuth, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id as string;
       const skill = await storage.getSkill(id);
       if (!skill || skill.userId !== req.session.userId) {
         return res.status(404).json({ message: "Skill not found" });
@@ -188,7 +185,6 @@ export async function registerRoutes(
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      // Parse PDF
       let text: string;
       try {
         const pdf = (pdfParse as any).default || pdfParse;
@@ -207,7 +203,6 @@ export async function registerRoutes(
         });
       }
 
-      // Extract skills using AI
       const extractedSkills = await extractSkillsFromText(text);
       
       if (extractedSkills.length === 0) {
@@ -288,7 +283,7 @@ export async function registerRoutes(
 
   app.post("/api/career-paths/:id/select", requireAuth, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id as string;
       const careerPath = await storage.getCareerPath(id);
       
       if (!careerPath || careerPath.userId !== req.session.userId) {
@@ -341,7 +336,7 @@ export async function registerRoutes(
 
   app.patch("/api/roadmap-steps/:id", requireAuth, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id as string;
       const step = await storage.updateRoadmapStep(id, req.body);
       if (!step) {
         return res.status(404).json({ message: "Step not found" });
@@ -389,7 +384,7 @@ export async function registerRoutes(
 
   app.delete("/api/saved-courses/:courseId", requireAuth, async (req, res) => {
     try {
-      const courseId = parseInt(req.params.courseId);
+      const courseId = req.params.courseId as string;
       await storage.deleteSavedCourse(req.session.userId!, courseId);
       res.json({ message: "Course removed from saved" });
     } catch (error) {
@@ -435,7 +430,7 @@ export async function registerRoutes(
 
   app.patch("/api/saved-projects/:projectId", requireAuth, async (req, res) => {
     try {
-      const projectId = parseInt(req.params.projectId);
+      const projectId = req.params.projectId as string;
       const savedProject = await storage.updateSavedProject(
         req.session.userId!,
         projectId,
@@ -453,7 +448,7 @@ export async function registerRoutes(
 
   app.delete("/api/saved-projects/:projectId", requireAuth, async (req, res) => {
     try {
-      const projectId = parseInt(req.params.projectId);
+      const projectId = req.params.projectId as string;
       await storage.deleteSavedProject(req.session.userId!, projectId);
       res.json({ message: "Project removed from saved" });
     } catch (error) {
@@ -475,7 +470,7 @@ export async function registerRoutes(
 
       const roadmap = await storage.getRoadmap(userId);
       const roadmapSteps = roadmap?.steps || [];
-      const completedSteps = roadmapSteps.filter((s) => s.isCompleted).length;
+      const completedSteps = roadmapSteps.filter((s: any) => s.isCompleted).length;
 
       res.json({
         skills,
