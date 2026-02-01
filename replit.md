@@ -27,21 +27,24 @@ The frontend follows a page-based structure under `client/src/pages/` with share
 - **Password Security**: bcrypt for password hashing
 - **File Uploads**: Multer for handling resume uploads (PDF parsing)
 
-The server uses a modular structure with routes defined in `server/routes.ts`, AI functionality in `server/ai.ts`, and database operations abstracted through `server/storage.ts`.
+The server uses a modular structure with routes defined in `server/routes.ts`, AI functionality in `server/ai.ts`, and database operations in `server/local/storage-mongo.ts`.
 
 ### Database Layer
-- **Primary ORM**: Drizzle ORM with PostgreSQL dialect
-- **Schema Location**: `shared/schema.ts` - shared between frontend and backend
-- **Schema Design**: Includes users, skills, career_paths, roadmaps, roadmap_steps, courses, projects, and saved items tables
-- **Migrations**: Managed via drizzle-kit (`npm run db:push`)
+- **Database**: MongoDB (via Mongoose ODM)
+- **Connection**: Requires `MONGODB_URI` environment variable
+- **Models Location**: `server/local/models.ts` - Mongoose schemas for all collections
+- **Storage Implementation**: `server/local/storage-mongo.ts` - All CRUD operations
+- **Seeding**: `server/local/seed-mongo.ts` - Seeds courses and projects data
 
-**Local Development with MongoDB**: The codebase includes a complete MongoDB implementation under `server/local/` for running the project locally on Windows without Docker:
-- `server/local/models.ts` - Mongoose schemas for all collections
-- `server/local/mongodb.ts` - MongoDB connection handler
-- `server/local/storage-mongo.ts` - MongoDB storage implementation (drop-in replacement for storage.ts)
-- `server/local/seed-mongo.ts` - Database seeding script for courses and projects
-
-See `README.md` for detailed local setup instructions.
+**Collections:**
+- `users` - User accounts with authentication
+- `skills` - User skills with proficiency levels
+- `careerpaths` - AI-generated career recommendations
+- `roadmaps` - Learning roadmaps with steps
+- `courses` - Available courses from various platforms
+- `projects` - Project recommendations
+- `savedcourses` - User's saved courses
+- `savedprojects` - User's saved projects with progress tracking
 
 ### AI Integration
 - **Provider**: OpenAI GPT-4 via Replit AI Integrations
@@ -56,11 +59,20 @@ See `README.md` for detailed local setup instructions.
 - **Production**: Custom build script (`script/build.ts`) using esbuild for server bundling and Vite for client build
 - **Output**: Server bundle to `dist/index.cjs`, client assets to `dist/public/`
 
+## Required Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MONGODB_URI` | Yes | MongoDB connection string (Atlas or local) |
+| `SESSION_SECRET` | Yes | Secret for session encryption |
+| `AI_INTEGRATIONS_OPENAI_API_KEY` | Yes | OpenAI API key (auto-configured on Replit) |
+| `AI_INTEGRATIONS_OPENAI_BASE_URL` | Yes | OpenAI base URL (auto-configured on Replit) |
+
 ## External Dependencies
 
 ### Database
-- **PostgreSQL**: Primary database, connection via `DATABASE_URL` environment variable
-- **Drizzle ORM**: Type-safe database queries and schema management
+- **MongoDB**: Primary database, connection via `MONGODB_URI` environment variable
+- **Mongoose**: ODM for MongoDB with type-safe schemas
 
 ### AI Services
 - **OpenAI API**: GPT-4 for AI features (skill extraction, career recommendations, roadmap generation)
@@ -69,7 +81,6 @@ See `README.md` for detailed local setup instructions.
 ### Authentication
 - **express-session**: Server-side session management
 - **bcrypt**: Password hashing
-- **connect-pg-simple**: PostgreSQL session store (optional)
 
 ### Third-Party Course/Project Platforms
 The application references external learning platforms for course recommendations:
@@ -80,16 +91,19 @@ The application references external learning platforms for course recommendation
 - freeCodeCamp
 - GitHub (for project references)
 
-### Replit Integrations
-Located in `server/replit_integrations/` and `client/replit_integrations/`:
-- **Chat**: Conversation storage and streaming chat routes
-- **Audio**: Voice recording, playback, and speech-to-text capabilities
-- **Image**: Image generation via OpenAI
-- **Batch**: Rate-limited batch processing utilities
-
 ### Key NPM Packages
+- `mongoose`: MongoDB ODM
 - `@tanstack/react-query`: Data fetching and caching
 - `zod`: Schema validation (shared between client/server)
-- `drizzle-zod`: Generate Zod schemas from Drizzle tables
 - `multer`: File upload handling
 - `pdf-parse`: Resume PDF parsing
+
+## Running Locally on Windows 11
+
+1. Install Node.js (v18+) from https://nodejs.org/
+2. Install MongoDB Community Server from https://www.mongodb.com/try/download/community
+3. Clone the repository and run `npm install`
+4. Create `.env` file with `MONGODB_URI=mongodb://localhost:27017/skillwise`
+5. Run `npm run dev`
+
+See `README.md` for detailed instructions.

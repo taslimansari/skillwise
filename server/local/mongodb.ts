@@ -1,10 +1,32 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/skillwise";
-
 let isConnected = false;
 
 export async function connectMongoDB(): Promise<void> {
+  const MONGODB_URI = process.env.MONGODB_URI;
+  
+  if (!MONGODB_URI) {
+    console.error("========================================");
+    console.error("ERROR: MONGODB_URI environment variable is not set!");
+    console.error("");
+    console.error("To run this application, you need a MongoDB database.");
+    console.error("");
+    console.error("Option 1: MongoDB Atlas (Free Cloud Database)");
+    console.error("  1. Go to https://www.mongodb.com/atlas");
+    console.error("  2. Create a free account and cluster");
+    console.error("  3. Create a database user");
+    console.error("  4. Allow network access from anywhere");
+    console.error("  5. Get your connection string");
+    console.error("");
+    console.error("Option 2: Local MongoDB (Windows/Mac/Linux)");
+    console.error("  1. Install MongoDB Community Server");
+    console.error("  2. Use: mongodb://localhost:27017/skillwise");
+    console.error("");
+    console.error("Then set MONGODB_URI in your environment/secrets.");
+    console.error("========================================");
+    throw new Error("MONGODB_URI environment variable is required");
+  }
+  
   if (isConnected) {
     console.log("MongoDB already connected");
     return;
@@ -14,7 +36,7 @@ export async function connectMongoDB(): Promise<void> {
     mongoose.set("strictQuery", true);
     
     await mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
     });
     
@@ -40,7 +62,6 @@ mongoose.connection.on("error", (err) => {
 
 mongoose.connection.on("disconnected", () => {
   isConnected = false;
-  console.log("MongoDB disconnected");
 });
 
 process.on("SIGINT", async () => {
