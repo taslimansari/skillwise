@@ -1,3 +1,10 @@
+// new changes
+
+import "dotenv/config";
+
+// ends here
+
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
